@@ -9,7 +9,7 @@ import pytest
 
 from cryptography.hazmat.primitives.ciphers import algorithms, modes
 
-from .utils import generate_encrypt_test
+from .utils import generate_aead_test, generate_encrypt_test
 from ...utils import load_nist_vectors
 
 
@@ -90,4 +90,20 @@ class TestSM4ModeCTR:
         ["draft-ribose-cfrg-sm4-10-ctr.txt"],
         lambda key, **kwargs: algorithms.SM4(binascii.unhexlify((key))),
         lambda iv, **kwargs: modes.CTR(binascii.unhexlify(iv)),
+    )
+
+
+@pytest.mark.supported(
+    only_if=lambda backend: backend.cipher_supported(
+        algorithms.SM4(b"\x00" * 16), modes.GCM(b"\x00" * 16)
+    ),
+    skip_message="Does not support SM4 GCM",
+)
+class TestSM4ModeGCM:
+    test_cfb = generate_aead_test(
+        load_nist_vectors,
+        os.path.join("ciphers", "SM4"),
+        ["rfc8998-sm4-gcm.txt"],
+        algorithms.AES,
+        modes.GCM,
     )
